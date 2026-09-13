@@ -22,11 +22,14 @@ cp -R assets _site/assets
 # newest visual polish and daily media layer without changing the stable app
 # architecture.
 cat personal-polish.css >> _site/theme.css
+cat v7-handwritten-cats.css >> _site/theme.css
 cat daily-media.js >> _site/app.js
 cat site-enhancements.js >> _site/app.js
+cat v7-cats.js >> _site/app.js
 
-# Bust the old v4 theme cache on phones that already opened the site.
-sed -i 's/theme.css?v=4/theme.css?v=6/g' _site/data.js
+# Bust older cached assets on phones that already opened the site.
+sed -i -E 's/theme\.css\?v=[0-9]+/theme.css?v=7/g' _site/data.js
+sed -i 's#app.js</script>#app.js?v=7</script>#g' _site/index.html
 
 # Fail loudly rather than shipping a page that 404s on its own config/theme/media.
 for f in index.html styles.css theme.css app.js data.js favicon.svg \
