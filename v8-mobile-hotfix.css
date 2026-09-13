@@ -1,0 +1,289 @@
+/* ============================================================================
+   v8 — mobile viewport hotfix
+   Fixes Samsung/Android edge clipping, keeps mobile layouts mixed (not all one
+   column), and moves decorative cats behind content so they never cover copy.
+   ========================================================================== */
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+@supports not (overflow: clip) {
+  html,
+  body { overflow-x: hidden; }
+}
+
+.shell {
+  width: min(100%, var(--wide)) !important;
+  max-width: 100% !important;
+  margin-inline: auto !important;
+  padding-inline-start: max(1rem, env(safe-area-inset-left)) !important;
+  padding-inline-end: max(1rem, env(safe-area-inset-right)) !important;
+}
+
+.shell > *,
+.today,
+.unlocks,
+.song,
+.soon,
+.cities,
+.flight,
+.foot,
+.moments-grid,
+.section-head,
+.today-note,
+.unlock-today,
+.unlock-list,
+.city-strip,
+.ticket {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.section-head,
+.today-note,
+.unlock-today,
+.unlock-list,
+.ticket,
+.city-strip,
+.moments-grid {
+  width: 100%;
+}
+
+.section-title,
+.today-note,
+.today-sign,
+.unlock-body,
+.unlock-item-peek,
+.soon-title,
+.soon-text,
+.song-name,
+.song-artist {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+/* The roaming cats are decoration, not viewport chrome. They now live across
+   the document instead of staying fixed over whatever the user is reading. */
+.page-kittens {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 0 !important;
+  overflow: clip !important;
+}
+
+.shell {
+  position: relative;
+  z-index: 2;
+}
+
+.page-kitten {
+  opacity: .58;
+}
+
+.page-kitten[data-side='left'] {
+  left: max(.65rem, var(--kitten-edge)) !important;
+}
+
+.page-kitten[data-side='right'] {
+  right: max(.65rem, var(--kitten-edge)) !important;
+}
+
+@media (max-width: 48rem) {
+  :root {
+    --gutter: 1rem;
+  }
+
+  .shell {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-inline-start: max(.95rem, env(safe-area-inset-left)) !important;
+    padding-inline-end: max(.95rem, env(safe-area-inset-right)) !important;
+  }
+
+  .hero,
+  .route,
+  .today,
+  .unlocks,
+  .cities,
+  .flight,
+  .moments-grid,
+  .foot {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+  }
+
+  .section-head {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    align-items: baseline !important;
+    justify-content: flex-start !important;
+    gap: .6rem !important;
+    padding-inline: .15rem !important;
+    overflow: visible !important;
+  }
+
+  .section-title {
+    max-width: 100% !important;
+    font-size: clamp(1.2rem, 5.4vw, 1.58rem) !important;
+    line-height: 1.55 !important;
+  }
+
+  .today {
+    padding-inline: .15rem;
+  }
+
+  .today-note {
+    display: block;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
+    font-size: clamp(1.08rem, 4.8vw, 1.38rem) !important;
+    line-height: 1.86 !important;
+    text-align: right !important;
+  }
+
+  .today-sign {
+    max-width: 100%;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
+  }
+
+  /* Keep the two daily-moment cards side by side, but make each column truly
+     shrinkable so neither one can force the whole page wider than the phone. */
+  .moments-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: .6rem !important;
+    overflow: visible !important;
+  }
+
+  .moments-grid > .song,
+  .moments-grid > .soon {
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .moments-grid .song-body,
+  .moments-grid .soon-card,
+  .moments-grid .song-actions {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .song-name,
+  .song-artist,
+  .soon-title,
+  .soon-text {
+    max-width: 100% !important;
+  }
+
+  /* City cards remain a horizontal strip instead of becoming a long vertical
+     stack. The scroll is contained inside this section, never on the page. */
+  .city-strip {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .city-strip > * {
+    min-width: 0;
+  }
+
+  .route {
+    overflow: visible !important;
+  }
+
+  .route-stage,
+  .route-legend {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .route-legend {
+    overflow: hidden;
+  }
+
+  .legend-km,
+  .legend-target .legend-km {
+    white-space: nowrap;
+  }
+
+  .ticket {
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .ticket-main,
+  .ticket-stub {
+    min-width: 0 !important;
+  }
+
+  .unlock-today,
+  .unlock-list {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .unlock-item {
+    min-width: 0 !important;
+  }
+
+  .unlock-item > * {
+    min-width: 0 !important;
+  }
+
+  .page-kitten {
+    width: clamp(1.15rem, 5.2vw, 1.55rem) !important;
+    opacity: .42 !important;
+    filter: drop-shadow(0 4px 9px rgba(5, 2, 12, .18)) !important;
+  }
+
+  .page-kitten[data-side='left'] {
+    left: max(.8rem, var(--kitten-edge)) !important;
+  }
+
+  .page-kitten[data-side='right'] {
+    right: max(.8rem, var(--kitten-edge)) !important;
+  }
+}
+
+@media (max-width: 25rem) {
+  .shell {
+    padding-inline-start: max(.8rem, env(safe-area-inset-left)) !important;
+    padding-inline-end: max(.8rem, env(safe-area-inset-right)) !important;
+  }
+
+  .today-note {
+    font-size: clamp(1.02rem, 4.65vw, 1.24rem) !important;
+    line-height: 1.82 !important;
+  }
+
+  .section-title {
+    font-size: clamp(1.16rem, 5.1vw, 1.45rem) !important;
+  }
+
+  .moments-grid {
+    gap: .45rem !important;
+  }
+
+  .moments-grid > .song,
+  .moments-grid > .soon {
+    padding: .72rem !important;
+  }
+}
