@@ -1,0 +1,41 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # No install step: the suite has no dependencies. It needs a Node build
+      # with full ICU (the official Node 22 builds have it) because every
+      # assertion here is about Istanbul, Tehran and Madrid wall-clock time.
+      - name: Verify full ICU
+        run: |
+          node -e "
+            const ok = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Tehran' }).format(0).length > 0;
+            if (!ok) { console.error('Node is missing full ICU; the timezone assertions cannot run.'); process.exit(1); }
+            console.log('full ICU present');
+          "
+
+      # 81 checks: every phase boundary, the Istanbul midnight rollover, unlock
+      # gating, cat geometry at 13 widths, song matching, and data sanity.
+      #
+      # The data-sanity ones are the reason this runs on every PR: data.js is
+      # meant to be edited by hand, and these catch a gap in the arc, two days
+      # sharing a message, or an unknown unlock kind before they ship.
+      - name: Phase and data tests
+        run: node tools/test-phases.js
