@@ -55,20 +55,9 @@ jobs:
         with:
           enablement: true
 
-      # Publish only the site. `path: .` would also serve README.md and tools/,
-      # which are repository furniture, not part of the page.
+      # Shared with any other static host — see tools/build-site.sh.
       - name: Assemble site
-        run: |
-          set -euo pipefail
-          mkdir -p _site
-          cp index.html styles.css app.js data.js favicon.svg robots.txt _site/
-          cp -R assets _site/assets
-          # Fail loudly here rather than shipping a page that 404s on its config.
-          for f in index.html styles.css app.js data.js favicon.svg \
-                   assets/fonts/vazirmatn-arabic.woff2 assets/fonts/vazirmatn-latin.woff2; do
-            test -s "_site/$f" || { echo "::error::missing from _site: $f"; exit 1; }
-          done
-          echo "Publishing:"; find _site -type f | sort
+        run: bash tools/build-site.sh
 
       - name: Upload site
         uses: actions/upload-pages-artifact@v5
