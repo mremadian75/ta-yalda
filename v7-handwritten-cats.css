@@ -1,0 +1,138 @@
+/* ==========================================================================
+   v7 — softer handwritten feel + four tiny roaming cats
+   ========================================================================== */
+
+:root {
+  --fa-display: 'IRANSansHandwritten', 'Vazirmatn', system-ui, sans-serif;
+}
+
+/* Keep the page minimal, but make the Persian feel less typeset and more like
+   a personal note. IRANSansHandwritten is used automatically if it is present
+   on the device/project; Vazirmatn remains the safe fallback. */
+.hero-title,
+.section-title,
+.today-note,
+.ticket-name,
+.sheet-body,
+.soon-title,
+.unlock-body,
+.hero-kicker,
+.hero-sub {
+  font-family: var(--fa-display) !important;
+  font-weight: 300 !important;
+  letter-spacing: -.015em !important;
+  font-synthesis: none;
+}
+
+.hero-title {
+  font-weight: 400 !important;
+  letter-spacing: -.035em !important;
+}
+
+.section-title {
+  font-weight: 300 !important;
+  line-height: 1.45 !important;
+}
+
+.today-note {
+  font-weight: 300 !important;
+  line-height: 1.95 !important;
+  max-width: 37rem;
+}
+
+.today-sign,
+.soon-text,
+.song-why,
+.unlock-kind,
+.foot-line {
+  font-family: var(--fa-display) !important;
+  font-weight: 300 !important;
+}
+
+/* First daily loop has intentionally no caption. Let the visual breathe. */
+.soon-card.is-media-only {
+  display: block !important;
+}
+.soon-card.is-media-only .soon-media {
+  aspect-ratio: 16 / 11;
+}
+
+/* Four tiny cats, randomized by JS on every load. Kept on screen edges so they
+   add life without blocking the actual content. */
+.page-kittens {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.page-kitten {
+  position: absolute;
+  top: var(--kitten-top);
+  width: clamp(1.9rem, 3vw, 2.55rem);
+  aspect-ratio: 1;
+  opacity: .82;
+  transform: rotate(var(--kitten-rotate));
+  filter: drop-shadow(0 6px 14px rgba(5, 2, 12, .26));
+  will-change: transform;
+}
+
+.page-kitten[data-side='left'] { left: var(--kitten-edge); }
+.page-kitten[data-side='right'] { right: var(--kitten-edge); }
+.page-kitten svg { width: 100%; height: 100%; display: block; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-kitten {
+    animation: kitten-float 4.8s ease-in-out infinite var(--kitten-delay);
+  }
+  .page-kitten:nth-child(2) { animation-duration: 5.4s; }
+  .page-kitten:nth-child(3) { animation-duration: 4.2s; }
+  .page-kitten:nth-child(4) { animation-duration: 5.9s; }
+
+  .mini-cat-tail {
+    transform-origin: 16px 46px;
+    animation: tiny-tail 2.7s ease-in-out infinite;
+  }
+}
+
+@keyframes kitten-float {
+  0%, 100% { transform: translateY(0) rotate(var(--kitten-rotate)); }
+  50% { transform: translateY(-7px) rotate(calc(var(--kitten-rotate) + 2deg)); }
+}
+
+@keyframes tiny-tail {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(7deg); }
+}
+
+@media (max-width: 48rem) {
+  .hero-title {
+    font-size: clamp(3.35rem, 18vw, 5.1rem) !important;
+  }
+
+  .section-title {
+    font-size: clamp(1.35rem, 5.9vw, 1.82rem) !important;
+  }
+
+  .today-note {
+    font-size: clamp(1.18rem, 5.3vw, 1.58rem) !important;
+    line-height: 1.9 !important;
+  }
+
+  .page-kitten {
+    width: clamp(1.35rem, 6.7vw, 1.85rem);
+    opacity: .72;
+  }
+
+  .page-kitten[data-side='left'] { left: max(.2rem, var(--kitten-edge)); }
+  .page-kitten[data-side='right'] { right: max(.2rem, var(--kitten-edge)); }
+
+  .soon-card.is-media-only .soon-media {
+    aspect-ratio: 1 / 1.02;
+  }
+}
+
+@media (max-width: 22rem) {
+  .page-kitten { width: 1.28rem; opacity: .62; }
+}
