@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f6efe8" />
+  <meta name="description" content="تا یلدا — از مادرید و ساری تا یک قرار در استانبول" />
+  <meta name="robots" content="noindex,nofollow" />
+  <meta property="og:title" content="تا یلدا" />
+  <meta property="og:description" content="از مادرید و ساری، تا یک قرار در استانبول." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <title>تا یلدا — Istanbul, 14 Oct 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="paper-noise" aria-hidden="true"></div>
+
+  <main class="shell">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="eyebrow-row">
+        <span class="eyebrow">MADRID · SARI · ISTANBUL</span>
+        <span class="live-badge"><span class="live-dot" aria-hidden="true"></span>LIVE</span>
+      </div>
+
+      <div class="hero-copy">
+        <p class="kicker">یک جای کوچک روی اینترنت، تا وقتی ببینمت</p>
+        <h1 id="page-title">تا <span>یلدا</span></h1>
+        <p class="hero-sub" id="hero-sub">از مادرید و ساری، تا یک قرار در استانبول.</p>
+      </div>
+
+      <section class="countdown-card" aria-label="زمان باقی‌مانده تا رسیدن یلدا به استانبول">
+        <p class="countdown-label">تا رسیدن یلدا به استانبول</p>
+        <div class="countdown" aria-live="polite">
+          <div class="time-unit"><strong id="days">--</strong><span>روز</span></div>
+          <div class="colon" aria-hidden="true">:</div>
+          <div class="time-unit"><strong id="hours">--</strong><span>ساعت</span></div>
+          <div class="colon" aria-hidden="true">:</div>
+          <div class="time-unit"><strong id="minutes">--</strong><span>دقیقه</span></div>
+          <div class="colon seconds-colon" aria-hidden="true">:</div>
+          <div class="time-unit seconds-unit"><strong id="seconds">--</strong><span>ثانیه</span></div>
+        </div>
+        <p class="meeting-stamp"><span>14 OCT 2026</span><i aria-hidden="true"></i><span>10:45 · IST</span></p>
+      </section>
+
+      <section class="route-card" aria-label="مسیر ماهان و یلدا به استانبول">
+        <div class="route-topline">
+          <div><span class="route-city-en">MAHAN</span><strong>Madrid</strong></div>
+          <div class="route-destination"><span>قرار ما</span><strong>Istanbul</strong></div>
+          <div><span class="route-city-en">YALDA</span><strong>Sari</strong></div>
+        </div>
+
+        <div class="route-visual" id="route-visual">
+          <div class="track left-track"></div>
+          <div class="track right-track"></div>
+          <div class="istanbul-pin" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img"><path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Z"/><circle cx="12" cy="10" r="2.2"/></svg>
+          </div>
+          <button class="cat cat-left" id="cat-mahan" type="button" aria-label="گربه ماهان؛ برای پیام مخفی کلیک کن">
+            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M16 22 12 10l13 7c2-1 4-1 7-1s5 0 7 1l13-7-4 12c4 4 6 9 6 15 0 12-9 19-22 19S10 49 10 37c0-6 2-11 6-15Z"/><circle cx="24" cy="34" r="2"/><circle cx="40" cy="34" r="2"/><path d="M28 43c2 2 6 2 8 0M32 37v5"/></svg>
+          </button>
+          <button class="cat cat-right" id="cat-yalda" type="button" aria-label="گربه یلدا؛ برای پیام مخفی کلیک کن">
+            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M16 22 12 10l13 7c2-1 4-1 7-1s5 0 7 1l13-7-4 12c4 4 6 9 6 15 0 12-9 19-22 19S10 49 10 37c0-6 2-11 6-15Z"/><circle cx="24" cy="34" r="2"/><circle cx="40" cy="34" r="2"/><path d="M28 43c2 2 6 2 8 0M32 37v5"/></svg>
+          </button>
+        </div>
+
+        <div class="route-bottomline">
+          <span id="route-madrid-distance">Madrid → Istanbul · … km</span>
+          <span id="route-progress-label">یک قدم نزدیک‌تر</span>
+          <span id="route-sari-distance">Sari → Istanbul · … km</span>
+        </div>
+      </section>
+    </section>
+
+    <section class="daily-grid" aria-label="لحظه امروز">
+      <article class="note-card card">
+        <header class="card-header">
+          <span>پیام امروز</span><span class="card-index" id="day-index">DAY --</span>
+        </header>
+        <blockquote id="daily-message">هر روزی که می‌گذرد، یک روز کمتر تا دیدن توست.</blockquote>
+        <p class="signature">برای یلدا، با کمی بی‌صبری.</p>
+      </article>
+
+      <article class="song-card card">
+        <header class="card-header">
+          <span>SONG OF THE DAY</span><span class="tiny-wave" aria-hidden="true">∿∿∿</span>
+        </header>
+        <div class="song-meta">
+          <div class="vinyl" aria-hidden="true"><span></span></div>
+          <div>
+            <p class="song-title" id="song-title">Loading…</p>
+            <p class="song-artist" id="song-artist"></p>
+          </div>
+        </div>
+        <audio id="song-preview" controls preload="none" hidden></audio>
+        <div class="song-actions">
+          <button class="soft-button" id="preview-button" type="button">۳۰ ثانیه گوش بده</button>
+          <a class="text-link" id="spotify-link" href="#" target="_blank" rel="noopener">Open in Spotify ↗</a>
+        </div>
+        <p class="song-status" id="song-status">در حال پیدا کردن preview…</p>
+      </article>
+    </section>
+
+    <section class="live-section" aria-labelledby="live-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">RIGHT NOW</p>
+          <h2 id="live-title">سه شهر، یک مقصد</h2>
+        </div>
+        <p>ساعت و هوای زنده؛ چون فاصله وقتی عدد می‌شود، کمی قابل‌تحمل‌تر است.</p>
+      </div>
+
+      <div class="city-grid">
+        <article class="city-card" data-city="madrid">
+          <div class="city-top"><div><span>MAHAN</span><h3>Madrid</h3></div><div class="weather-glyph" data-weather-icon aria-hidden="true"></div></div>
+          <p class="city-time" data-time>--:--</p>
+          <div class="city-weather"><strong data-temp>--°</strong><span data-condition>Loading weather…</span></div>
+          <div class="city-meta"><span data-sunset>Sunset --:--</span><span>Europe/Madrid</span></div>
+        </article>
+
+        <article class="city-card city-card-center" data-city="istanbul">
+          <div class="city-top"><div><span>DESTINATION</span><h3>Istanbul</h3></div><div class="weather-glyph" data-weather-icon aria-hidden="true"></div></div>
+          <p class="city-time" data-time>--:--</p>
+          <div class="city-weather"><strong data-temp>--°</strong><span data-condition>Loading weather…</span></div>
+          <div class="city-meta"><span data-sunset>Sunset --:--</span><span>Europe/Istanbul</span></div>
+        </article>
+
+        <article class="city-card" data-city="sari">
+          <div class="city-top"><div><span>YALDA</span><h3>Sari</h3></div><div class="weather-glyph" data-weather-icon aria-hidden="true"></div></div>
+          <p class="city-time" data-time>--:--</p>
+          <div class="city-weather"><strong data-temp>--°</strong><span data-condition>Loading weather…</span></div>
+          <div class="city-meta"><span data-sunset>Sunset --:--</span><span>Asia/Tehran</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="flight-note card" aria-labelledby="flight-title">
+      <div>
+        <p class="section-kicker">THE REAL PLAN</p>
+        <h2 id="flight-title">ساری → تهران → استانبول</h2>
+        <p>پرواز یلدا از تهران ساعت 07:50 حرکت می‌کند و 10:45 در Istanbul Airport می‌نشیند.</p>
+      </div>
+      <div class="boarding-pass" aria-label="اطلاعات عمومی پرواز یلدا">
+        <div><span>FROM</span><strong>IKA</strong><small>Tehran</small></div>
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M44 24 28 18V7c0-2-2-4-4-4s-4 2-4 4v11L4 24v5l16-3v10l-5 4v4l9-2 9 2v-4l-5-4V26l16 3v-5Z"/></svg>
+        <div><span>TO</span><strong>IST</strong><small>Istanbul</small></div>
+        <div class="boarding-time"><span>ARRIVAL</span><strong>10:45</strong><small>14 OCT 2026</small></div>
+      </div>
+    </section>
+
+    <section class="unlocks" aria-labelledby="unlocks-title">
+      <div class="section-heading compact">
+        <div><p class="section-kicker">ONE TINY THING A DAY</p><h2 id="unlocks-title">هر روز یکی باز می‌شود</h2></div>
+        <p>روزهای گذشته را می‌توانی دوباره باز کنی؛ روزهای آینده هنوز باید کمی صبر کنند.</p>
+      </div>
+      <div class="unlock-grid" id="unlock-grid" aria-label="پیام‌های روزانه"></div>
+    </section>
+
+    <section class="cat-oracle card" aria-labelledby="cat-title">
+      <div class="oracle-cat" aria-hidden="true">
+        <svg viewBox="0 0 120 120"><path d="M31 43 23 16l27 15c4-2 7-2 10-2s6 0 10 2l27-15-8 27c7 8 10 17 10 28 0 22-16 35-39 35S21 93 21 71c0-11 3-20 10-28Z"/><circle cx="46" cy="66" r="4"/><circle cx="74" cy="66" r="4"/><path d="M54 83c4 4 8 4 12 0M60 72v9"/></svg>
+      </div>
+      <div>
+        <p class="section-kicker">CAT'S SECRET</p>
+        <h2 id="cat-title">این گربه یک چیزهایی می‌داند.</h2>
+        <p id="cat-secret">روش کلیک کن. شاید چیزی را لو بدهد.</p>
+        <button class="primary-button" id="cat-secret-button" type="button">گربه رو بپرس</button>
+      </div>
+    </section>
+
+    <footer>
+      <p>تا یلدا · <span id="footer-year">2026</span></p>
+      <p>Made somewhere between Madrid, Sari & Istanbul.</p>
+    </footer>
+  </main>
+
+  <dialog id="unlock-dialog" class="unlock-dialog">
+    <button class="dialog-close" type="button" aria-label="بستن">×</button>
+    <p class="dialog-day" id="dialog-day"></p>
+    <p class="dialog-message" id="dialog-message"></p>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
