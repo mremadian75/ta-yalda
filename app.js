@@ -335,6 +335,7 @@
     el.unlockCount = $('[data-unlock-count]');
     el.unlockPast = $('[data-unlock-past]');
     el.unlockList = $('[data-unlock-list]');
+    el.unlockMore = $('[data-unlock-more]');
     el.unlockLocked = $('[data-unlock-locked]');
     el.whisper = $('[data-whisper]');
     el.whisperText = $('[data-whisper-text]');
@@ -587,6 +588,8 @@
         li.appendChild(btn);
         list.appendChild(li);
       });
+
+      applyUnlockCollapse();
     } else {
       el.unlockPast.hidden = true;
     }
@@ -599,6 +602,26 @@
       el.unlockLocked.hidden = true;
     }
     setText(el.unlockCount, openedCount > 0 ? faNum(openedCount) + ' تا تا حالا' : '');
+  }
+
+  // The archive is a keepsake, not a feed: keep it short by default and let
+  // her open the whole thing when she wants to read back through it.
+  const RECENT = 5;
+  let unlockExpanded = false;
+
+  function applyUnlockCollapse() {
+    const items = $$('li', el.unlockList);
+    const more = el.unlockMore;
+    items.forEach((li, i) => { li.hidden = !unlockExpanded && i >= RECENT; });
+    if (!more) return;
+    const hiddenCount = Math.max(0, items.length - RECENT);
+    if (hiddenCount === 0) {
+      more.hidden = true;
+      return;
+    }
+    more.hidden = false;
+    more.setAttribute('aria-expanded', unlockExpanded ? 'true' : 'false');
+    setText(more, unlockExpanded ? 'کمتر' : faNum(hiddenCount) + ' تای دیگه');
   }
 
   function openSheet(entry, dayKey) {
@@ -983,6 +1006,13 @@
       if (document.hidden) stopTicking();
       else startTicking();
     });
+
+    if (el.unlockMore) {
+      el.unlockMore.addEventListener('click', () => {
+        unlockExpanded = !unlockExpanded;
+        applyUnlockCollapse();
+      });
+    }
 
     const sheetClose = $('[data-sheet-close]');
     if (sheetClose) sheetClose.addEventListener('click', () => { if (typeof el.sheet.close === 'function') el.sheet.close(); });

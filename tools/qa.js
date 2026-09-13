@@ -197,8 +197,14 @@ async function inspect(page, ctx, width, opts) {
     const r = await inspect(page, `stage:${name}`, 390, { arrived: name === 'arrived' || name.startsWith('after') });
     if (errs.length) note(`stage:${name}`, `console: ${errs.slice(0, 3).join(' | ')}`);
 
-    const phase = await page.evaluate(() => document.body.className);
-    console.log(`   ${name.padEnd(13)} body="${phase.padEnd(12)}" figure="${(r.text['figure value'] || '').slice(0, 14).padEnd(14)}" lead="${(r.text['countdown lead'] || '').slice(0, 26)}"`);
+    const extra = await page.evaluate(() => ({
+      phase: document.body.className,
+      cats: [...document.querySelectorAll('.cat')].map(c => c.dataset.state).join('/'),
+      height: document.documentElement.scrollHeight,
+      pastRows: document.querySelectorAll('[data-unlock-list] li:not([hidden])').length
+    }));
+    console.log(`   ${name.padEnd(13)} body="${extra.phase.padEnd(12)}" figure="${(r.text['figure value'] || '').slice(0, 12).padEnd(12)}" cats=${extra.cats.padEnd(19)} page=${String(extra.height).padStart(5)}px rows=${extra.pastRows}`);
+    if (extra.height > 9000) note(`stage:${name}`, `page is ${extra.height}px tall on a phone`);
 
     if (SHOTS) await page.screenshot({ path: path.join(SHOT_DIR, `stage-${name}.png`), fullPage: true });
     await ctx.close();

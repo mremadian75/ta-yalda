@@ -1187,3 +1187,11 @@ dialog:not([open]) { display: none; }
     scroll-behavior: auto !important;
   }
 }
+
+/* The unlock archive grows to 31 rows by the last week; keep it folded. */
+.btn-more {
+  margin-block-start: 1rem;
+  font-size: .8125rem;
+  color: var(--ink-muted);
+}
+.btn-more:hover { color: var(--burgundy); }
