@@ -1,1 +1,0 @@
-This branch replaces the generic copy with Mahan's actual texting voice, adds the songs he provided by title, and introduces the animated dusk palette. Temporary review note.
