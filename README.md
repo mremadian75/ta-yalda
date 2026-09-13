@@ -102,39 +102,33 @@ does not look broken without it.
 
 ## Privacy — read this bit
 
-The repository is **private**, and nothing in it contains a booking reference,
-e-ticket number, passport data or payment details. Please keep it that way.
+**This repository is public.** That was a deliberate choice: GitHub Pages is not
+offered for private repositories on the Free plan, and making the repo public
+was the route taken to get the site online.
 
-The page sends `noindex, nofollow, noarchive, noimageindex` and `robots.txt`
-disallows everything.
+So, plainly:
 
-**That is not privacy, and the URL is not a secret either.** `noindex` only asks
-well-behaved crawlers to stay away. More importantly: a GitHub Pages site is
-served unauthenticated to the whole internet even when the repository behind it
-is private — repo visibility does not propagate to the published page, and
-access-controlled Pages requires GitHub Enterprise Cloud.
+- Anyone can read this code, the full git history, and **all 32 daily messages**.
+- The published site is served to anyone on the internet.
+- The address is guessable — it is built from the account and repo name.
+- `noindex, nofollow, noarchive` and `robots.txt` only ask well-behaved search
+  engines to stay away. They are not access control.
 
-And the address is not secret: it is derived mechanically from the account and
-repository name (`mremadian75` + `ta-yalda` → `mremadian75.github.io/ta-yalda/`),
-so it can be guessed, not just leaked.
+**Write `data.js` as though a stranger will read it, because one can.** Keep out
+anything you would not want seen: no booking reference, no e-ticket number, no
+passport or payment details, no phone numbers, no addresses. The `flight` block
+in `data.js` holds only the airport codes, the city names and the arrival time,
+and there is a comment there saying to keep it that way.
 
-Practically: write the daily messages as though a stranger *could* read them.
-Nothing in `data.js` should be something you would mind being seen. If you want the
-site genuinely private, use Cloudflare Pages with Cloudflare Access (free, see
-Hosting below). Netlify's password protection is a paid feature.
+The history was checked before the repo was made public: no credentials, no
+email addresses, no phone numbers, and no photos or documents have ever been
+committed.
 
----
+If you later want the messages genuinely private, move the site to Cloudflare
+Pages with Cloudflare Access (free, 50 users) and make this repository private
+again — see Hosting below.
 
-## Deployment
-
-`.github/workflows/pages.yml` deploys on every push to `main`, using GitHub's
-official Pages actions. It assembles a clean `_site/` folder first, so only the
-page itself is published — not this README or `tools/`.
-
-Note it triggers on **`main`**. Work on a feature branch does not deploy until
-it is merged.
-
-### Hosting: GitHub Pages is not available for this repo
+## Hosting: GitHub Pages is not available for this repo
 
 Settings → Pages shows **"Upgrade or make this repository public to enable
 Pages"**. There is no source selector at all. On the Free plan, GitHub Pages is
