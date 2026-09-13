@@ -226,10 +226,10 @@ img { max-width: 100%; height: auto; display: block; }
   content: '';
   position: absolute;
   inset-inline: 4%;
-  inset-block-end: .04em;
-  height: .07em;
+  inset-block-end: .02em;
+  height: .045em;
   background: currentColor;
-  opacity: .32;
+  opacity: .26;
   border-radius: 50%;
   transform: rotate(-.6deg);
 }
@@ -348,29 +348,20 @@ img { max-width: 100%; height: auto; display: block; }
   transition: stroke-dashoffset 1s var(--ease);
 }
 
-/* The two departure cities sit on the map where they belong, rather than in a
-   legend underneath — it should read as a small map, not a bar chart. */
-.route-anchor {
+/* A small mark where each arc leaves its city, so the lines do not start in
+   mid-air. The city names themselves are in the legend below — putting them
+   here collided with the cats' own name labels. */
+.route-origin {
   position: absolute;
   top: 83.2%;
-  margin-block-start: .55rem;
-  font-size: .8125rem;
-  color: var(--ink-muted);
-  white-space: nowrap;
-}
-.route-anchor::before {
-  content: '';
-  position: absolute;
-  top: -.55rem;
-  left: 50%;
-  transform: translate(-50%, -50%);
   width: 5px;
   height: 5px;
+  margin: -2.5px 0 0 -2.5px;
   border-radius: 50%;
-  background: var(--ink-muted);
+  background: var(--rule-strong);
 }
-.route-anchor-start { left: 7%; transform: translateX(-50%); }
-.route-anchor-end { left: 93%; transform: translateX(-50%); }
+.route-origin-start { left: 7%; }
+.route-origin-end { left: 93%; }
 
 .pin {
   position: absolute;
@@ -901,8 +892,8 @@ img { max-width: 100%; height: auto; display: block; }
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.city-sun span { margin-inline-end: .45rem; }
-.city-sun span:last-child { margin-inline-end: 0; }
+.city-sun span:not(.sr-only) { margin-inline-end: .55rem; }
+.city-sun span:not(.sr-only):last-child { margin-inline-end: 0; }
 .city.is-offline .city-cond { font-style: italic; }
 
 /* ------------------------------------------------------------ 11. ticket */
@@ -1180,7 +1171,7 @@ dialog:not([open]) { display: none; }
 }
 
 @media (max-width: 26rem) {
-  .route-stage { aspect-ratio: 1000 / 460; }
+  .route-stage { aspect-ratio: 1000 / 560; }
   .unlock-item { grid-template-columns: 1fr auto; }
   .unlock-item-kind { grid-column: 1 / -1; }
   .countdown-stamp { gap: .5rem; font-size: .6875rem; }

@@ -263,6 +263,9 @@
     yalda: { p0: { x: 930, y: 316 }, p1: { x: 750, y: 132 }, p2: { x: 500, y: 120 } }
   };
   const VIEW = { w: 1000, h: 380 };
+  // Where the two cats stand once she has landed: the altitude they set off
+  // from, directly under the Istanbul marker rather than over its label.
+  const ARRIVED_Y = 316;
 
   /* ==========================================================================
      6. Weather
@@ -426,10 +429,13 @@
     const centre = ARCS.mahan.p2.x * scaleX;
 
     if (arrived) {
-      // Side by side at the meeting point, just touching.
+      // Side by side at the meeting point, just touching — but BELOW the pin,
+      // not on top of it, or they cover the "Istanbul" label.
       const half = catW * 0.42;
       xM = centre - half;
       xY = centre + half;
+      const y = ARRIVED_Y * scaleY;
+      return { t: t, mahan: { x: xM, y: y }, yalda: { x: xY, y: y } };
     } else {
       const keepOut = pinW / 2 + catW / 2 + 6;
       xM = Math.min(xM, centre - keepOut);
@@ -673,9 +679,13 @@
       const sunset = data.daily && data.daily.sunset && data.daily.sunset[0];
       const sunrise = data.daily && data.daily.sunrise && data.daily.sunrise[0];
       if (sunset && sunrise) {
-        // Static, author-written markup — no API text is interpolated as HTML.
-        sunEl.innerHTML = SUN_UP_SVG + '<span></span>' + SUN_DOWN_SVG + '<span></span>';
-        const slots = sunEl.querySelectorAll('span');
+        // Static, author-written markup — no API text is ever interpolated as
+        // HTML. The sr-only labels matter because the icons are aria-hidden,
+        // so without them a screen reader would read "07:5320:27".
+        sunEl.innerHTML =
+          SUN_UP_SVG + '<span class="sr-only">طلوع </span><span></span>' +
+          SUN_DOWN_SVG + '<span class="sr-only">غروب </span><span></span>';
+        const slots = sunEl.querySelectorAll('span:not(.sr-only)');
         slots[0].textContent = String(sunrise).slice(11, 16);
         slots[1].textContent = String(sunset).slice(11, 16);
       } else {

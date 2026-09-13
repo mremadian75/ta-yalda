@@ -141,10 +141,13 @@ async function inspect(page, ctx, width, opts) {
     const pin = document.querySelector('[data-pin]');
     if (stage && m && y && pin) {
       const mb = m.getBoundingClientRect(), yb = y.getBoundingClientRect(), pb = pin.getBoundingClientRect();
+      // A real 2D intersection: sharing an x-range while sitting below the pin
+      // is not an overlap.
+      const hits = (a, b) => !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
       out.cats = {
         gap: Math.round(Math.min(yb.left, mb.left) === mb.left ? yb.left - mb.right : mb.left - yb.right),
-        mahanOverPin: !(mb.right < pb.left || mb.left > pb.right),
-        yaldaOverPin: !(yb.right < pb.left || yb.left > pb.right),
+        mahanOverPin: hits(mb, pb),
+        yaldaOverPin: hits(yb, pb),
         inStage: mb.left >= stage.getBoundingClientRect().left - 1 && yb.right <= stage.getBoundingClientRect().right + 1
       };
     }
@@ -157,10 +160,11 @@ async function inspect(page, ctx, width, opts) {
   r.tiny.forEach(t => note(ctx, `tap target under 44px: ${t.sel} (${t.w}×${t.h})`));
   if (r.cats) {
     if (opts.arrived) {
-      // After the meeting the two cats are SUPPOSED to stand together at the
-      // pin — closeness is the payoff, not a layout bug. Only check they
-      // actually converged and stayed on the stage.
+      // After the meeting the two cats are SUPPOSED to stand together —
+      // closeness is the payoff, not a layout bug. But they must not cover the
+      // Istanbul marker or its label.
       if (r.cats.gap > 40) note(ctx, `cats should be together after arrival but are ${r.cats.gap}px apart`);
+      if (r.cats.mahanOverPin || r.cats.yaldaOverPin) note(ctx, `a cat covers the Istanbul marker after arrival`);
     } else {
       if (r.cats.gap < 0) note(ctx, `cats overlap each other by ${-r.cats.gap}px`);
       if (r.cats.mahanOverPin || r.cats.yaldaOverPin) note(ctx, `a cat overlaps the Istanbul pin`);
@@ -256,6 +260,76 @@ async function inspect(page, ctx, width, opts) {
     const r = await inspect(page, 'no-storage', 390);
     if (errs.length) note('no-storage', errs.join(' | '));
     console.log(`   note rendered: "${(r.text["today's note"] || '').slice(0, 44)}…"`);
+    await ctx.close();
+  }
+
+  // ── E. The success path ────────────────────────────────────────────────
+  // This sandbox's browser cannot reach the open internet, so every section
+  // above exercises the FAILURE path. Stub both APIs with real captured
+  // responses so the healthy rendering is actually verified too.
+  console.log('\n\x1b[1mE. Both APIs healthy (real responses, stubbed)\x1b[0m');
+  {
+    const fx = d => JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', d), 'utf8'));
+    const weather = {
+      '41.0082': fx('weather-istanbul.json'),
+      '40.4168': fx('weather-madrid.json'),
+      '36.5633': fx('weather-sari.json')
+    };
+    const itunes = fx('itunes.json');
+
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 900 }, deviceScaleFactor: 2, locale: 'fa-IR' });
+    // 30 days out => songs[30], which is what tools/fixtures/itunes.json holds.
+    // The app deliberately refuses to play a track that does not match the song
+    // of the day, so the fixture has to line up with the date.
+    await ctx.addInitScript(clockScript('2026-09-14T12:00:00+03:00'));
+    await ctx.route('**', route => {
+      const u = route.request().url();
+      if (u.startsWith(base)) return route.continue();
+      if (u.indexOf('api.open-meteo.com') > -1) {
+        const lat = Object.keys(weather).find(k => u.indexOf(k) > -1);
+        return route.fulfil
+          ? route.fulfil({ contentType: 'application/json', body: JSON.stringify(weather[lat]) })
+          : route.fulfill({ contentType: 'application/json', body: JSON.stringify(weather[lat]) });
+      }
+      if (u.indexOf('itunes.apple.com') > -1) {
+        return route.fulfill({ contentType: 'application/json', body: JSON.stringify(itunes) });
+      }
+      // Artwork and audio: succeed with a 1px gif / empty body rather than abort.
+      return route.fulfill({ status: 200, contentType: 'image/gif', body: Buffer.from('R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==', 'base64') });
+    });
+
+    const page = await ctx.newPage();
+    const errs = [];
+    page.on('pageerror', e => errs.push('PAGEERROR ' + e.message));
+    await page.goto(base).catch(() => {});
+    await page.waitForTimeout(2200);
+    const r = await inspect(page, 'healthy', 390);
+    if (errs.length) note('healthy', errs.join(' | '));
+
+    const live = await page.evaluate(() => ({
+      cities: [...document.querySelectorAll('.city')].map(c => ({
+        name: c.querySelector('.city-name').textContent.trim(),
+        temp: c.querySelector('[data-city-temp]').textContent.trim(),
+        cond: c.querySelector('[data-city-cond]').textContent.trim(),
+        sun: c.querySelector('[data-city-sun]').textContent.trim(),
+        icon: !!c.querySelector('[data-city-icon] svg')
+      })),
+      playVisible: !document.querySelector('[data-song-play]').hidden,
+      playLabel: document.querySelector('[data-song-play-label]').textContent.trim(),
+      catStates: [...document.querySelectorAll('.cat')].map(c => c.dataset.state)
+    }));
+
+    live.cities.forEach(c => {
+      console.log(`   ${c.name.padEnd(9)} ${c.temp.padEnd(5)} ${c.cond.padEnd(12)} sun:${c.sun || '(none)'} icon:${c.icon ? 'svg' : 'MISSING'}`);
+      if (!c.temp) note('healthy', `${c.name}: no temperature rendered`);
+      if (!c.icon) note('healthy', `${c.name}: weather icon did not render`);
+      if (!c.sun) note('healthy', `${c.name}: sunrise/sunset row empty`);
+      if (/undefined|NaN/.test(c.temp + c.cond + c.sun)) note('healthy', `${c.name}: broken value`);
+    });
+    console.log(`   play button: ${live.playVisible ? 'shown ("' + live.playLabel + '")' : 'HIDDEN'} · cats: ${live.catStates.join(', ')}`);
+    if (!live.playVisible) note('healthy', 'preview found but the play button stayed hidden');
+
+    if (SHOTS) await page.screenshot({ path: path.join(SHOT_DIR, 'healthy.png'), fullPage: true });
     await ctx.close();
   }
 
