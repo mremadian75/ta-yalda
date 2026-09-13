@@ -134,14 +134,35 @@ page itself is published — not this README or `tools/`.
 Note it triggers on **`main`**. Work on a feature branch does not deploy until
 it is merged.
 
-The previous deploy failed at `actions/configure-pages` with *"Get Pages site
-failed … Not Found"*. That was not a broken action version — Pages had simply
-never been created for this repository, and the step only *reads* the config
-unless you tell it otherwise. It now runs with `enablement: true`, so the
-workflow creates the Pages site itself.
+### The deploy failure, and what is actually left to do
 
-**One caveat that is out of the workflow's hands:** GitHub Pages on a *private*
-repository requires a paid plan (Pro, Team or Enterprise). On the Free plan the
-step will still fail, and the options are to upgrade, to make the repository
-public, or to host the folder somewhere else — it is plain static files, so
-Netlify or Cloudflare Pages would serve it from the private repo just as well.
+The first two runs died at `actions/configure-pages` with *"Get Pages site
+failed … Not Found"*. That was **not** a broken action version — all four action
+pins resolve fine. Pages had simply never been created for this repository, and
+that step only *reads* the config unless you tell it to create one.
+
+It now runs with `enablement: true`, which asks it to create the site. That was
+tested directly (run #3, `workflow_dispatch`) and GitHub's answer was:
+
+```
+Get Pages site failed.    Error: Not Found
+Create Pages site failed. Error: Resource not accessible by integration
+```
+
+So the Actions token is **not permitted to create the Pages site** for this
+repo, and nothing in this file can grant it that.
+
+**The one manual step:**
+
+> Settings → Pages → Build and deployment → Source → **GitHub Actions**
+
+Then merge to `main` (or re-run the workflow) and it will deploy.
+
+If that settings page doesn't offer GitHub Actions as a source, it's because
+Pages for *private* repositories needs a paid plan. In that case the choice is:
+upgrade, make the repo public, or host the folder somewhere else — it's plain
+static files, so Netlify or Cloudflare Pages will serve it straight from the
+private repo, and both can password-protect it, which GitHub Pages cannot.
+
+The site is **not live yet**: `https://mremadian75.github.io/ta-yalda/` returns
+404 until Pages is switched on.

@@ -27,17 +27,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      # `enablement: true` is the fix for the previous failure. Without it this
-      # step only *reads* the Pages config and dies with "Get Pages site failed
-      # … Not Found" when no Pages site exists yet. With it, the job creates the
-      # Pages site itself (build_type: workflow) using the `pages: write`
-      # permission above, so no manual setting is needed.
+      # `enablement: true` asks this step to CREATE the Pages site rather than
+      # only read it. Without it the step dies with "Get Pages site failed …
+      # Not Found" whenever no Pages site exists yet, which is what killed the
+      # first two runs of this workflow.
       #
-      # CAVEAT, and it is not something the workflow can solve: GitHub Pages on
-      # a PRIVATE repository requires a paid plan (Pro / Team / Enterprise). On
-      # the Free plan this step fails even with enablement: true, because there
-      # is no Pages site to create. The repo would have to go public, or the
-      # site be hosted elsewhere.
+      # VERIFIED on run #3 (workflow_dispatch, 2026-09-13): with enablement on,
+      # the step does attempt creation, and GitHub answers:
+      #
+      #     Get Pages site failed.    Error: Not Found
+      #     Create Pages site failed. Error: Resource not accessible by integration
+      #
+      # So the Actions token is not permitted to create the Pages site for this
+      # repository, and no change to this file can grant it that. Pages has to
+      # be switched on once by a human:
+      #
+      #     Settings → Pages → Build and deployment → Source → GitHub Actions
+      #
+      # If that page offers no such option, the repository is private on a plan
+      # without Pages for private repos — then it is upgrade, make the repo
+      # public, or host the folder elsewhere.
+      #
+      # This line is still correct to keep: once the site exists, creation is a
+      # no-op, and it means a future repo never needs the manual step.
       - name: Configure Pages
         uses: actions/configure-pages@v6
         with:
