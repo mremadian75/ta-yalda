@@ -1,5 +1,5 @@
 window.DAILY_MEDIA = [
-  { src: 'assets/loops/01.mp4', title: 'یه کم ناز برای امروز', text: 'فقط برای اینکه یه لبخند کوچیک بزنی.' },
+  { src: 'assets/loops/01.mp4', title: '', text: '' },
   { src: 'assets/loops/02.mp4', title: 'من و تو، این مود', text: 'این یکی خیلی نیاز به توضیح نداره.' },
   { src: 'assets/loops/03.mp4', title: 'یه بغل طلب داری', text: 'این قسمت از برنامه خیلی جدیه.' },
   { src: 'assets/loops/04.mp4', title: 'اون حال خوبه', text: 'فکر اینکه بالاخره می‌بینمت هنوز ذوقم می‌کنه.' },
