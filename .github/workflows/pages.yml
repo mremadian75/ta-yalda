@@ -7,13 +7,14 @@ on:
 
 permissions:
   contents: read
-  actions: read
   pages: write
   id-token: write
 
+# Never cancel a deployment that is already in flight — a half-applied deploy is
+# worse than a queued one.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -26,13 +27,42 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      # `enablement: true` asks this step to CREATE the Pages site rather than
+      # only read it. Without it the step dies with "Get Pages site failed …
+      # Not Found" whenever no Pages site exists yet, which is what killed the
+      # first two runs of this workflow.
+      #
+      # VERIFIED on run #3 (workflow_dispatch, 2026-09-13): with enablement on,
+      # the step does attempt creation, and GitHub answers:
+      #
+      #     Get Pages site failed.    Error: Not Found
+      #     Create Pages site failed. Error: Resource not accessible by integration
+      #
+      # So the Actions token is not permitted to create the Pages site for this
+      # repository, and no change to this file can grant it that. Pages has to
+      # be switched on once by a human:
+      #
+      #     Settings → Pages → Build and deployment → Source → GitHub Actions
+      #
+      # If that page offers no such option, the repository is private on a plan
+      # without Pages for private repos — then it is upgrade, make the repo
+      # public, or host the folder elsewhere.
+      #
+      # This line is still correct to keep: once the site exists, creation is a
+      # no-op, and it means a future repo never needs the manual step.
       - name: Configure Pages
         uses: actions/configure-pages@v6
+        with:
+          enablement: true
+
+      # Shared with any other static host — see tools/build-site.sh.
+      - name: Assemble site
+        run: bash tools/build-site.sh
 
       - name: Upload site
         uses: actions/upload-pages-artifact@v5
         with:
-          path: .
+          path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment
