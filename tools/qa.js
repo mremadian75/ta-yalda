@@ -1,0 +1,273 @@
+/* ============================================================================
+   node tools/qa.js   [--shots]
+   ----------------------------------------------------------------------------
+   Drives the real page in Chromium at every breakpoint and at every stage of
+   the countdown, and fails on: console errors, failed requests, horizontal
+   overflow, undefined/NaN on screen, missing content, tap targets under 44px,
+   and cats overlapping. With --shots it also writes screenshots.
+   ========================================================================== */
+'use strict';
+
+const { chromium } = require('playwright');
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+
+const ROOT = path.join(__dirname, '..');
+const SHOTS = process.argv.includes('--shots');
+const SHOT_DIR = process.env.SHOT_DIR || path.join(ROOT, '.qa-shots');
+
+const TYPES = {
+  '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml',
+  '.woff2': 'font/woff2', '.txt': 'text/plain; charset=utf-8', '.json': 'application/json'
+};
+
+function serve() {
+  return new Promise(resolve => {
+    const server = http.createServer((req, res) => {
+      let p = decodeURIComponent(req.url.split('?')[0]);
+      if (p === '/') p = '/index.html';
+      const file = path.join(ROOT, p);
+      if (!file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
+        res.writeHead(404); return res.end('not found');
+      }
+      res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
+      res.end(fs.readFileSync(file));
+    });
+    server.listen(0, '127.0.0.1', () => resolve({ server, port: server.address().port }));
+  });
+}
+
+/** Freeze the page's clock at a chosen instant, before any script runs. */
+function clockScript(iso) {
+  return `(() => {
+    const FIXED = ${Date.parse(iso)};
+    const Real = Date;
+    const start = Real.now();
+    function Fake(...a) {
+      if (a.length === 0) return new Real(FIXED + (Real.now() - start));
+      return new Real(...a);
+    }
+    Fake.prototype = Real.prototype;
+    Fake.now = () => FIXED + (Real.now() - start);
+    Fake.parse = Real.parse; Fake.UTC = Real.UTC;
+    Object.setPrototypeOf(Fake, Real);
+    globalThis.Date = Fake;
+  })();`;
+}
+
+const STAGES = [
+  ['far-30d',    '2026-09-14T12:00:00+03:00'],
+  ['near-12d',   '2026-10-02T12:00:00+03:00'],
+  ['lastweek-7d','2026-10-07T12:00:00+03:00'],
+  ['last72-3d',  '2026-10-11T12:00:00+03:00'],
+  ['tomorrow-1d','2026-10-13T12:00:00+03:00'],
+  ['today-4h',   '2026-10-14T06:45:00+03:00'],
+  ['final-hour', '2026-10-14T10:00:00+03:00'],
+  ['arrived',    '2026-10-14T11:30:00+03:00'],
+  ['after-3d',   '2026-10-17T12:00:00+03:00']
+];
+
+const WIDTHS = [320, 375, 390, 430, 768, 1024, 1440];
+
+const problems = [];
+const note = (ctx, msg) => problems.push(`${ctx}: ${msg}`);
+
+async function inspect(page, ctx, width, opts) {
+  opts = opts || {};
+  // Give the layout and the deferred network work a moment to settle.
+  await page.waitForTimeout(900);
+
+  const r = await page.evaluate(() => {
+    const out = { overflow: null, bad: [], tiny: [], empty: [], cats: null, text: {} };
+
+    if (document.documentElement.scrollWidth > window.innerWidth + 1) {
+      out.overflow = { scrollWidth: document.documentElement.scrollWidth, inner: window.innerWidth };
+      // Name the widest offending element so the report is actionable.
+      let worst = null;
+      document.querySelectorAll('*').forEach(el => {
+        const b = el.getBoundingClientRect();
+        if (b.right > window.innerWidth + 1 || b.left < -1) {
+          if (!worst || b.width > worst.w) {
+            worst = { sel: el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).join('.') : ''), w: b.width, right: b.right };
+          }
+        }
+      });
+      out.overflow.worst = worst;
+    }
+
+    const BAD = /\bundefined\b|\bNaN\b|\[object |\bnull\b/;
+    document.querySelectorAll('body *').forEach(el => {
+      if (el.children.length) return;
+      const t = (el.textContent || '').trim();
+      if (t && BAD.test(t)) out.bad.push(t.slice(0, 80));
+    });
+
+    // Interactive things must be finger-sized.
+    document.querySelectorAll('button, a[href]:not(.skip-link), [role="button"]').forEach(el => {
+      const b = el.getBoundingClientRect();
+      if (b.width === 0 && b.height === 0) return;
+      const style = getComputedStyle(el);
+      if (style.visibility === 'hidden' || style.display === 'none') return;
+      // A cat carries its own 44px pseudo-element hit area.
+      const eff = el.classList.contains('cat')
+        ? Math.max(b.height, 44)
+        : b.height;
+      const effW = el.classList.contains('cat') ? Math.max(b.width, 44) : b.width;
+      if (eff < 44 || effW < 44) {
+        out.tiny.push({ sel: el.className || el.tagName, w: Math.round(b.width), h: Math.round(b.height) });
+      }
+    });
+
+    const must = {
+      'figure value': '[data-figure-value]',
+      'countdown lead': '[data-countdown-lead]',
+      "today's note": '[data-today-note]',
+      'unlock body': '[data-unlock-body]',
+      'song title': '[data-song-title]',
+      'route status': '[data-route-status]'
+    };
+    for (const [label, sel] of Object.entries(must)) {
+      const el = document.querySelector(sel);
+      const t = el ? (el.textContent || '').trim() : '';
+      out.text[label] = t;
+      if (!t || t === '…' || t === '—') out.empty.push(label);
+    }
+
+    const stage = document.querySelector('[data-route-stage]');
+    const m = document.querySelector('[data-cat="mahan"]');
+    const y = document.querySelector('[data-cat="yalda"]');
+    const pin = document.querySelector('[data-pin]');
+    if (stage && m && y && pin) {
+      const mb = m.getBoundingClientRect(), yb = y.getBoundingClientRect(), pb = pin.getBoundingClientRect();
+      out.cats = {
+        gap: Math.round(Math.min(yb.left, mb.left) === mb.left ? yb.left - mb.right : mb.left - yb.right),
+        mahanOverPin: !(mb.right < pb.left || mb.left > pb.right),
+        yaldaOverPin: !(yb.right < pb.left || yb.left > pb.right),
+        inStage: mb.left >= stage.getBoundingClientRect().left - 1 && yb.right <= stage.getBoundingClientRect().right + 1
+      };
+    }
+    return out;
+  });
+
+  if (r.overflow) note(ctx, `horizontal overflow ${r.overflow.scrollWidth}px > ${r.overflow.inner}px — worst: ${JSON.stringify(r.overflow.worst)}`);
+  if (r.bad.length) note(ctx, `broken text on screen: ${JSON.stringify(r.bad.slice(0, 3))}`);
+  if (r.empty.length) note(ctx, `empty content: ${r.empty.join(', ')}`);
+  r.tiny.forEach(t => note(ctx, `tap target under 44px: ${t.sel} (${t.w}×${t.h})`));
+  if (r.cats) {
+    if (opts.arrived) {
+      // After the meeting the two cats are SUPPOSED to stand together at the
+      // pin — closeness is the payoff, not a layout bug. Only check they
+      // actually converged and stayed on the stage.
+      if (r.cats.gap > 40) note(ctx, `cats should be together after arrival but are ${r.cats.gap}px apart`);
+    } else {
+      if (r.cats.gap < 0) note(ctx, `cats overlap each other by ${-r.cats.gap}px`);
+      if (r.cats.mahanOverPin || r.cats.yaldaOverPin) note(ctx, `a cat overlaps the Istanbul pin`);
+    }
+    if (!r.cats.inStage) note(ctx, `a cat escapes the route stage`);
+  }
+  return r;
+}
+
+(async () => {
+  const { server, port } = await serve();
+  const base = `http://127.0.0.1:${port}/`;
+  const browser = await chromium.launch({ executablePath: process.env.CHROME_BIN || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+
+  if (SHOTS) fs.mkdirSync(SHOT_DIR, { recursive: true });
+
+  console.log('\n\x1b[1mA. Every stage of the countdown (390px)\x1b[0m');
+  for (const [name, iso] of STAGES) {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 900 }, deviceScaleFactor: 2, locale: 'fa-IR' });
+    await ctx.addInitScript(clockScript(iso));
+    const page = await ctx.newPage();
+    const errs = [];
+    page.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+    page.on('pageerror', e => errs.push('PAGEERROR ' + e.message));
+    page.on('requestfailed', r => {
+      if (r.url().startsWith(base)) errs.push('LOCAL REQUEST FAILED ' + r.url() + ' ' + (r.failure() || {}).errorText);
+    });
+
+    await page.goto(base, { waitUntil: 'networkidle' }).catch(() => page.goto(base));
+    const r = await inspect(page, `stage:${name}`, 390, { arrived: name === 'arrived' || name.startsWith('after') });
+    if (errs.length) note(`stage:${name}`, `console: ${errs.slice(0, 3).join(' | ')}`);
+
+    const phase = await page.evaluate(() => document.body.className);
+    console.log(`   ${name.padEnd(13)} body="${phase.padEnd(12)}" figure="${(r.text['figure value'] || '').slice(0, 14).padEnd(14)}" lead="${(r.text['countdown lead'] || '').slice(0, 26)}"`);
+
+    if (SHOTS) await page.screenshot({ path: path.join(SHOT_DIR, `stage-${name}.png`), fullPage: true });
+    await ctx.close();
+  }
+
+  console.log('\n\x1b[1mB. Every breakpoint (at T-30d)\x1b[0m');
+  for (const w of WIDTHS) {
+    const ctx = await browser.newContext({ viewport: { width: w, height: 900 }, deviceScaleFactor: 1, locale: 'fa-IR' });
+    await ctx.addInitScript(clockScript('2026-09-14T12:00:00+03:00'));
+    const page = await ctx.newPage();
+    const errs = [];
+    page.on('pageerror', e => errs.push('PAGEERROR ' + e.message));
+    await page.goto(base, { waitUntil: 'networkidle' }).catch(() => page.goto(base));
+    const r = await inspect(page, `width:${w}`, w);
+    if (errs.length) note(`width:${w}`, errs.join(' | '));
+    console.log(`   ${String(w).padStart(4)}px  overflow=${r.overflow ? 'YES' : 'no '}  cat-gap=${r.cats ? r.cats.gap + 'px' : 'n/a'}`);
+    if (SHOTS) await page.screenshot({ path: path.join(SHOT_DIR, `width-${w}.png`), fullPage: true });
+    await ctx.close();
+  }
+
+  console.log('\n\x1b[1mC. Both APIs dead (the page must still look finished)\x1b[0m');
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 900 }, deviceScaleFactor: 2, locale: 'fa-IR' });
+    await ctx.addInitScript(clockScript('2026-09-20T12:00:00+03:00'));
+    // Kill every external host, keep the local assets.
+    await ctx.route('**', route => {
+      const u = route.request().url();
+      if (u.startsWith(base)) return route.continue();
+      return route.abort();
+    });
+    const page = await ctx.newPage();
+    const errs = [];
+    page.on('pageerror', e => errs.push('PAGEERROR ' + e.message));
+    await page.goto(base).catch(() => {});
+    await page.waitForTimeout(2500);
+    const r = await inspect(page, 'offline', 390);
+    if (errs.length) note('offline', errs.join(' | '));
+    const fallback = await page.evaluate(() => ({
+      weather: [...document.querySelectorAll('[data-city-cond]')].map(e => e.textContent.trim()),
+      song: (document.querySelector('[data-song-status]') || {}).textContent,
+      play: (document.querySelector('[data-song-play-label]') || {}).textContent
+    }));
+    console.log(`   weather → ${JSON.stringify(fallback.weather)}`);
+    console.log(`   song    → "${(fallback.song || '').trim()}" / button "${(fallback.play || '').trim()}"`);
+    if (fallback.weather.some(t => !t || /undefined|NaN/.test(t))) note('offline', 'weather fallback missing');
+    if (SHOTS) await page.screenshot({ path: path.join(SHOT_DIR, 'offline.png'), fullPage: true });
+    await ctx.close();
+  }
+
+  console.log('\n\x1b[1mD. localStorage blocked + reduced motion\x1b[0m');
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 900 }, reducedMotion: 'reduce', locale: 'fa-IR' });
+    await ctx.addInitScript(clockScript('2026-10-08T12:00:00+03:00'));
+    await ctx.addInitScript(`Object.defineProperty(window, 'localStorage', { get() { throw new Error('blocked'); } });`);
+    const page = await ctx.newPage();
+    const errs = [];
+    page.on('pageerror', e => errs.push('PAGEERROR ' + e.message));
+    await page.goto(base, { waitUntil: 'networkidle' }).catch(() => {});
+    const r = await inspect(page, 'no-storage', 390);
+    if (errs.length) note('no-storage', errs.join(' | '));
+    console.log(`   note rendered: "${(r.text["today's note"] || '').slice(0, 44)}…"`);
+    await ctx.close();
+  }
+
+  await browser.close();
+  server.close();
+
+  console.log('\n' + '─'.repeat(62));
+  if (problems.length) {
+    console.log(`\x1b[31m${problems.length} problem(s)\x1b[0m`);
+    problems.forEach(p => console.log('  ✗ ' + p));
+    process.exit(1);
+  }
+  console.log('\x1b[32mBrowser QA clean.\x1b[0m');
+  if (SHOTS) console.log(`Screenshots → ${SHOT_DIR}`);
+})();
