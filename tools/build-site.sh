@@ -30,8 +30,8 @@ cat v7-cats.js >> _site/app.js
 cat v8-mobile-hotfix.js >> _site/app.js
 
 # Bust older cached assets on phones that already opened the site.
-sed -i -E 's/theme\.css\?v=[0-9]+/theme.css?v=8/g' _site/data.js
-sed -i -E 's#app\.js(\?v=[0-9]+)?</script>#app.js?v=8</script>#g' _site/index.html
+sed -i -E 's/theme\.css\?v=[0-9]+/theme.css?v=9/g' _site/data.js
+sed -i -E 's#app\.js(\?v=[0-9]+)?</script>#app.js?v=9</script>#g' _site/index.html
 
 # Fail loudly rather than shipping a page that 404s on its own config/theme/media.
 for f in index.html styles.css theme.css app.js data.js favicon.svg \
