@@ -24,6 +24,7 @@ cp -R assets _site/assets
 cat personal-polish.css >> _site/theme.css
 cat v7-handwritten-cats.css >> _site/theme.css
 cat v8-mobile-hotfix.css >> _site/theme.css
+cat v13-paw-trail.css >> _site/theme.css
 cat v10-copy-trim.js >> _site/data.js
 cat v11-message-variety.js >> _site/data.js
 cat v12-cat-secrets.js >> _site/data.js
@@ -31,11 +32,12 @@ cat daily-media.js >> _site/app.js
 cat site-enhancements.js >> _site/app.js
 cat v7-cats.js >> _site/app.js
 cat v8-mobile-hotfix.js >> _site/app.js
+cat v13-paw-trail.js >> _site/app.js
 
 # Bust older cached assets on phones that already opened the site.
-sed -i -E 's/theme\.css\?v=[0-9]+/theme.css?v=12/g' _site/data.js
-sed -i -E 's#data\.js(\?v=[0-9]+)?</script>#data.js?v=12</script>#g' _site/index.html
-sed -i -E 's#app\.js(\?v=[0-9]+)?</script>#app.js?v=12</script>#g' _site/index.html
+sed -i -E 's/theme\.css\?v=[0-9]+/theme.css?v=13/g' _site/data.js
+sed -i -E 's#data\.js(\?v=[0-9]+)?</script>#data.js?v=13</script>#g' _site/index.html
+sed -i -E 's#app\.js(\?v=[0-9]+)?</script>#app.js?v=13</script>#g' _site/index.html
 
 # Fail loudly rather than shipping a page that 404s on its own config/theme/media.
 for f in index.html styles.css theme.css app.js data.js favicon.svg \
