@@ -88,9 +88,10 @@
     filter: drop-shadow(0 2px 5px rgba(9, 4, 15, .10));
   }
 
-  .paw-step.is-seen {
-    opacity: calc(var(--paw-opacity, .58) * .88);
-  }
+  .paw-step:nth-child(4n + 1) { --paw-opacity: .52; }
+  .paw-step:nth-child(4n + 2) { --paw-opacity: .48; }
+  .paw-step:nth-child(4n + 3) { --paw-opacity: .5; }
+  .paw-step:nth-child(4n) { --paw-opacity: .47; }
 }
 
 @media (max-width: 25rem) {
